@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>丝路茶商 - 剧情驱动版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <!-- <script src="minigames.js"></script> -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 游戏主容器 -->
+    <div class="game-container">
+        <div class="map-overlay"></div>
+         <!-- 新增：游戏模式切换按钮 -->
+        <button class="mode-toggle-btn" id="mode-toggle-btn" onclick="toggleGameMode()">
+            进入自由探索模式
+        </button>
+        
+        <!-- 新增：当前模式显示 -->
+        <div class="current-mode-display" id="current-mode-display">
+            当前模式：剧情模式
+        </div>
+
+        <!-- 城市节点 -->
+        <div class="city-node" id="longwu" style="top: 70%; left: 15%;">
+            <div class="city-icon">🍃</div>
+            <div class="city-name">龙坞</div>
+        </div>
+        
+        <div class="city-node" id="luoyang" style="top: 65%; left: 25%;">
+            <div class="city-icon">🏛️</div>
+            <div class="city-name">洛阳</div>
+        </div>
+        
+        <div class="city-node" id="xian" style="top: 60%; left: 35%;">
+            <div class="city-icon">🏺</div>
+            <div class="city-name">西安</div>
+        </div>
+        
+        <div class="city-node" id="lanzhou" style="top: 55%; left: 45%;">
+<div class="city-icon">🐪</div>
+            <div class="city-name">兰州</div>
+        </div>
+        
+        <div class="city-node" id="jiayuguan" style="top: 50%; left: 55%;">
+            <div class="city-icon">🏰</div>
+            <div class="city-name">嘉峪关</div>
+        </div>
+        
+        <div class="city-node" id="dunhuang" style="top: 45%; left: 65%;">
+            <div class="city-icon">🎨</div>
+            <div class="city-name">敦煌</div>
+        </div>
+        
+        <div class="city-node" id="wulumuqi" style="top: 40%; left: 80%;">
+            <div class="city-icon">🥛</div>
+            <div class="city-name">乌鲁木齐</div>
+        </div>
+
+        <!-- 角色图标 -->
+        <div class="character" id="character" style="display: none;"></div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">健康值</div>
+                <div class="status-bar-container">
+                    <div class="status-bar-fill health-bar" id="health-bar" style="width: 50%;"></div>
+                </div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">心情值</div>
+                <div class="status-bar-container">
+                    <div class="status-bar-fill mood-bar" id="mood-bar" style="width: 50%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 背包按钮 -->
+        <button class="inventory-btn" id="inventory-btn">🎒</button>
+    </div>
+
+    <!-- 龙坞小地图 -->
+    <div class="mini-map" id="longwu-mini-map">
+        <div class="mini-map-container">
+            <div class="mini-map-title">龙坞</div>
+             <div class="mini-map-content" style="grid-template-columns: repeat(2, 1fr); gap: 40px; max-width: 200px; margin: 0 auto; padding-bottom: 30px;">
+                <div class="mini-map-node available" id="longwu-teahouse" onclick="selectLongwuNode('teahouse')" style="width: 70px; height: 70px; font-size: 25px;">
+                    🍵
+                    <div class="mini-map-node-name">新疆茶馆</div>
+                </div>
+                <div class="mini-map-node unavailable" id="longwu-tea-mountain" onclick="selectLongwuNode('tea-mountain')" style="width: 70px; height: 70px; font-size: 25px;">
+                    🏔️
+                    <div class="mini-map-node-name">茶山</div>
+                </div>
+            </div>
+            <div class="dialog-buttons" style="margin-top: 20px;">
+                <button class="dialog-btn secondary" onclick="closeLongwuMiniMap()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 乌鲁木齐小地图 -->
+    <div class="mini-map" id="wlmq-mini-map">
+        <div class="mini-map-container">
+            <div class="mini-map-title">乌鲁木齐</div>
+            <div class="mini-map-content">
+                <div class="mini-map-node available" id="wlmq-bazaar" onclick="selectWlmqNode('bazaar')">
+                    🏪
+                    <div class="mini-map-node-name">大巴扎</div>
+                </div>
+                <div class="mini-map-node unavailable" id="wlmq-teahouse" onclick="selectWlmqNode('teahouse')">
+                    🍵
+                    <div class="mini-map-node-name">茶馆</div>
+                </div>
+                <div class="mini-map-node unavailable" id="wlmq-butter-tea" onclick="selectWlmqNode('butter-tea')">
+                    🥛
+                    <div class="mini-map-node-name">酥油奶茶铺</div>
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn secondary" onclick="closeWlmqMiniMap()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 对话框 -->
+    <div class="dialog-overlay" id="dialog-overlay">
+        <div class="dialog-box">
+            <div class="dialog-npc-section">
+                <div class="dialog-npc-image" id="dialog-npc-image"></div>
+                <div class="dialog-npc-name" id="dialog-npc-name"></div>
+            </div>
+            <div class="dialog-content-section">
+                <div class="dialog-title" id="dialog-title">欢迎来到丝路茶商</div>
+                <div class="dialog-content" id="dialog-content">你是龙坞茶商，需要运送龙井茶到乌鲁木齐，是否开始这段传奇之旅？</div>
+                <div class="dialog-buttons" id="dialog-buttons">
+                    <button class="dialog-btn primary" onclick="startGame()">开始旅程</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 小游戏界面 -->
+    <div class="minigame-container" id="minigame-container">
+        <div class="minigame-box">
+            <div class="minigame-title" id="minigame-title">采茶小游戏</div>
+            <div id="minigame-content"></div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn secondary" onclick="closeMinigame()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 背包界面 -->
+    <div class="inventory-overlay" id="inventory-overlay">
+        <div class="inventory-box">
+            <div class="inventory-title">我的背包</div>
+            <div id="inventory-content">
+                <div class="inventory-item">
+                    <div class="item-icon">🍃</div>
+                    <div class="item-info">
+                        <div class="item-name">龙井茶叶</div>
+                        <div class="item-desc">龙坞特产，清香怡人</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn secondary" onclick="closeInventory()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束界面 -->
+    <div class="game-over-overlay" id="game-over-overlay">
+        <div class="game-over-box">
+            <div class="game-over-title" id="game-over-title">游戏结束</div>
+            <div class="game-over-message" id="game-over-message">恭喜你完成了丝绸路的茶文化传播！</div>
+            <button class="restart-btn" onclick="restartGame()">重新开始</button>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
